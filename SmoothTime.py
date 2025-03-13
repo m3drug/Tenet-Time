@@ -3,40 +3,82 @@
 # With the location, Astral calculates the desired times, by default in UTC.
 from astral import LocationInfo
 from astral.sun import sun
+from astral import Observer
 import datetime
 import time
 from tkinter import *
 from tkinter.ttk import *
 
 # -------------------------------------
-timezone = datetime.timedelta(hours=3, minutes=30)
-city = LocationInfo(latitude=35.6892523, longitude=51.3896004)
-c_data = sun(city.observer, date=datetime.datetime.now() + timezone)
-t_data = sun(city.observer, date=datetime.datetime.now() + timezone + datetime.timedelta(days=1))
-y_data = sun(city.observer, date=datetime.datetime.now() + timezone - datetime.timedelta(days=1))
-# -------------------------------------
-current_utc = datetime.datetime.utcnow()
+# 1. Setting up 
+    # a) the timezone 
+timezone = datetime.timedelta(hours = 3, minutes = 30)
+
+    # b) location (latitude, longitude of Tehran, Iran)
+city = LocationInfo("Tehran", "Iran", "Asia/Tehran", 35.6892523, 51.3896004)
+
+    # c) observer (Defines the location of an observer on Earth.)
+observer = Observer(latitude = 35.6892523, # city.latitude, 
+                    longitude = 51.3896004) # city.longitude)
+
+    # d) in UTC
+current_utc = datetime.datetime.now().date()
+
+    # e) in the current Tehran timezone
 current_local = datetime.datetime.utcnow() + timezone
 #tomorrow = current_local + datetime.timedelta(days=1)
 #yesterday = current_local - datetime.timedelta(days=1)
 
+# 2. Storing the time of dawn, sunrise, noon and sunset and dusk for the given timezone + location for:
+    # a) today
+c_data = sun(observer, date = current_utc)
+
+    # b) tomorrow
+t_data = sun(observer, date = current_utc + datetime.timedelta(days = 1))
+
+    # c) yesterday
+y_data = sun(observer, date = current_utc - datetime.timedelta(days = 1))
 # -------------------------------------
-utc_sunrise = (c_data["sunrise"])
+# 3. Extracting the sunrise, noon and sunset times for today, tomorrow and yesterday in UTC
+    # a) Today's sunrise
+utc_sunrise = c_data["sunrise"]
 #utc_noon = (c_data["noon"])
-utc_sunset = (c_data["sunset"])
-utc_sunrise_t = (t_data["sunrise"])
-utc_sunset_y = (y_data["sunset"])
+
+    # b) Today's sunset
+utc_sunset = c_data["sunset"]
+
+    # c) Tomorrow's sunrise
+utc_sunrise_t = t_data["sunrise"]
+
+    # d) Yesterday's sunset
+utc_sunset_y = y_data["sunset"]
 # -------------------------------------
+# 4. Calculating the duration of sunlight for today, tomorrow and yesterday in UTC
+    # a) Today's sunlight duration
 sunlight_duration = (c_data["sunset"])-(c_data["sunrise"])
+
+    # b) Tomorrow's sunlight duration
 sunlight_duration_t = (t_data["sunset"])-(t_data["sunrise"])
+
+    # c) Yesterday's sunlight duration
 sunlight_duration_y = (y_data["sunset"])-(y_data["sunrise"])
 # -------------------------------------
+# 5. Calculating sunrise and sunset times as in step 4) to the current timezone
+    # a) Today's sunrise time in Tehran timezone
 real_sunrise = utc_sunrise + timezone
 #real_noon = utc_noon + timezone
+
+    # b) Today's sunset time in Tehran timezone
 real_sunset = utc_sunset + timezone
+
+    # c) Tomorrow's sunrise time in Tehran timezone
 real_sunrise_t = utc_sunrise_t + timezone
+
+    # d) Yesterday's sunset time in Tehran timezone
 real_sunset_y = utc_sunset_y + timezone
 # -------------------------------------
+# 6. Extracting the time from the datetime objects
+    # Exact sunrise time in Tehran
 sunrise_time = datetime.datetime.time(real_sunrise)
 #noon_time = datetime.datetime.time(real_noon)
 sunset_time = datetime.datetime.time(real_sunset)
