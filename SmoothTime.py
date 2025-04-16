@@ -1,6 +1,7 @@
 # C:\Users\Heisenberg\AppData\Local\Programs\Python\Python38-32\python.exe
 # Iran/Tehran
 # With the location, Astral calculates the desired times, by default in UTC.
+# Title: Proof-of-concept for dynamically adjusting social clock to sun clock
 from astral import LocationInfo
 from astral.sun import sun
 from astral import Observer
@@ -29,7 +30,8 @@ current_local = datetime.datetime.utcnow() + timezone
 #tomorrow = current_local + datetime.timedelta(days=1)
 #yesterday = current_local - datetime.timedelta(days=1)
 
-# 2. Storing the time of dawn, sunrise, noon and sunset and dusk for the given timezone + location for:
+# -------------------------------------------------------
+# 2. Storing the time of dawn, sunrise, noon and sunset and dusk in UTC:
     # a) today
 c_data = sun(observer, date = current_utc)
 
@@ -78,95 +80,168 @@ real_sunrise_t = utc_sunrise_t + timezone
 real_sunset_y = utc_sunset_y + timezone
 # -------------------------------------
 # 6. Extracting the time from the datetime objects
-    # Exact sunrise time in Tehran
+    # a) Exact sunrise time in Tehran
 sunrise_time = datetime.datetime.time(real_sunrise)
 #noon_time = datetime.datetime.time(real_noon)
+
+    # b) Exact sunset time in Tehran
 sunset_time = datetime.datetime.time(real_sunset)
+
+    # c) Exact sunrise time in Tehran for tomorrow
 sunrise_time_t = datetime.datetime.time(real_sunrise_t)
+
+    # d) Exact sunset time in Tehran for yesterday
 sunset_time_y = datetime.datetime.time(real_sunset_y)
 # -------------------------------------
-av_noon = datetime.timedelta(hours=12)
+# 7. Calculating the average noon time
+av_noon = datetime.timedelta(hours = 12)
 # -------------------------------------
-# new points today
-if datetime.timedelta(seconds=1) <= sunlight_duration < datetime.timedelta(hours=3):
+# 8. Calculating the polar circle for today
+    # a) If the duration of sunlight is less than 3 hours but greater than 1 second, the sunrise and sunset times are calculated as follows:
+if datetime.timedelta(seconds = 1) <= sunlight_duration < datetime.timedelta(hours = 3):
+        # (i) 'd_prime' is the duration of sunlight doubled
     d_prime = 2 * sunlight_duration
+        # (ii) The new sunrise time is calculated as the average noon time minus half of the duration of sunlight
     new_sunrise = av_noon - (d_prime / 2)
+        # (iii) The new sunset time is calculated as the average noon time plus half of the duration of sunlight
     new_sunset = av_noon + (d_prime / 2)
-elif sunlight_duration < datetime.timedelta(hours=9):
-    d_prime = sunlight_duration + datetime.timedelta(hours=3)
+
+    # b) If the duration of sunlight is less than 9 hours but greater than 3 hours, the sunrise and sunset times are calculated as follows:
+elif datetime.timedelta(hours = 3) <= sunlight_duration < datetime.timedelta(hours = 9):
+        # (i) 'd_prime' is the duration of sunlight plus 3 hours
+    d_prime = sunlight_duration + datetime.timedelta(hours = 3)
+        # (ii) The new sunrise time is calculated as the average noon time minus half of the duration of sunlight
     new_sunrise = av_noon - (d_prime / 2)
+        # (iii) The new sunset time is calculated as the average noon time plus half of the duration of sunlight
     new_sunset = av_noon + (d_prime / 2)
-elif sunlight_duration < datetime.timedelta(hours=15):
-    d_prime = datetime.timedelta(hours=12)
+
+    # c) If the duration of sunlight is less than 15 hours but greater than 9 hours, the sunrise and sunset times are calculated as follows:
+elif datetime.timedelta(hours = 9) <= sunlight_duration < datetime.timedelta(hours = 15):
+        # (i) 'd_prime' is 12 hours
+    d_prime = datetime.timedelta(hours = 12)
+        # (ii) The new sunrise time is calculated as the average noon time minus half of the duration of sunlight
     new_sunrise = av_noon - (d_prime / 2)
+        # (iii) The new sunset time is calculated as the average noon time plus half of the duration of sunlight
     new_sunset = av_noon + (d_prime / 2)
-elif sunlight_duration < datetime.timedelta(hours=21):
-    d_prime = sunlight_duration - datetime.timedelta(hours=3)
+
+    # d) If the duration of sunlight is less than 21 hours but greater than 15 hours, the sunrise and sunset times are calculated as follows:
+elif datetime.timedelta(hours = 15) <= sunlight_duration < datetime.timedelta(hours = 21):
+        # (i) 'd_prime' is the duration of sunlight minus 3 hours
+    d_prime = sunlight_duration - datetime.timedelta(hours = 3)
+        # (ii) The new sunrise time is calculated as the average noon time minus half of the duration of sunlight
     new_sunrise = av_noon - (d_prime / 2)
+        # (iii) The new sunset time is calculated as the average noon time plus half of the duration of sunlight
     new_sunset = av_noon + (d_prime / 2)
-elif sunlight_duration < datetime.timedelta(hours=24):
+
+    # e) If the duration of sunlight is less than 24 hours but greater than 21 hours, the sunrise and sunset times are calculated as follows:
+elif datetime.timedelta(hours = 21) <= sunlight_duration < datetime.timedelta(hours = 24):
+        # (i) 'd_prime' is the duration of sunlight doubled minus 24 hours
     d_prime = 2 * sunlight_duration - datetime.timedelta(hours=24)
+        # (ii) The new sunrise time is calculated as the average noon time minus half of the duration of sunlight
     new_sunrise = av_noon - (d_prime / 2)
+        # (iii) The new sunset time is calculated as the average noon time plus half of the duration of sunlight
     new_sunset = av_noon + (d_prime / 2)
 else:
     print("polar circle")
 
-# new points tomorrow
-if datetime.timedelta(seconds=1) <= sunlight_duration_t < datetime.timedelta(hours=3):
+# 8. Calculating the polar circle for tomorrow
+    # a) If the duration of sunlight is less than 3 hours but greater than 1 second, the sunrise and sunset times are calculated as follows:
+if datetime.timedelta(seconds = 1) <= sunlight_duration_t < datetime.timedelta(hours = 3):
+        # (i) 'd_prime_t' is the duration of sunlight doubled
     d_prime_t = 2 * sunlight_duration_t
-    new_sunrise_t = av_noon - (d_prime_t / 2)
-elif sunlight_duration_t < datetime.timedelta(hours=9):
-    d_prime_t = sunlight_duration_t + datetime.timedelta(hours=3)
-    new_sunrise_t = av_noon - (d_prime_t / 2)
-elif sunlight_duration_t < datetime.timedelta(hours=15):
-    d_prime_t = datetime.timedelta(hours=12)
-    new_sunrise_t = av_noon - (d_prime_t / 2)
-elif sunlight_duration_t < datetime.timedelta(hours=21):
-    d_prime_t = sunlight_duration_t - datetime.timedelta(hours=3)
-    new_sunrise_t = av_noon - (d_prime_t / 2)
-elif sunlight_duration_t < datetime.timedelta(hours=24):
-    d_prime_t = 2 * sunlight_duration_t - datetime.timedelta(hours=24)
+        # (ii) The new sunrise time is calculated as the average noon time minus half of the duration of sunlight
     new_sunrise_t = av_noon - (d_prime_t / 2)
 
-# new points yesterday
-if datetime.timedelta(seconds=1) <= sunlight_duration_y < datetime.timedelta(hours=3):
+    # b) If the duration of sunlight is less than 9 hours but greater than 3 hours, the sunrise and sunset times are calculated as follows:
+elif datetime.timedelta(hours = 3) <= sunlight_duration_t < datetime.timedelta(hours = 9):
+        # (i) 'd_prime_t' is the duration of sunlight plus 3 hours
+    d_prime_t = sunlight_duration_t + datetime.timedelta(hours = 3)
+        # (ii) The new sunrise time is calculated as the average noon time minus half of the duration of sunlight
+    new_sunrise_t = av_noon - (d_prime_t / 2)
+
+    # c) If the duration of sunlight is less than 15 hours but greater than 9 hours, the sunrise and sunset times are calculated as follows:
+elif datetime.timedelta(hours = 9) <= sunlight_duration_t < datetime.timedelta(hours = 15):
+        # (i) 'd_prime_t' is 12 hours
+    d_prime_t = datetime.timedelta(hours = 12)
+        # (ii) The new sunrise time is calculated as the average noon time minus half of the duration of sunlight
+    new_sunrise_t = av_noon - (d_prime_t / 2)
+    
+    # d) If the duration of sunlight is less than 21 hours but greater than 15 hours, the sunrise and sunset times are calculated as follows:
+elif datetime.timedelta(hours = 15) <= sunlight_duration_t < datetime.timedelta(hours = 21):
+        # (i) 'd_prime_t' is the duration of sunlight minus 3 hours
+    d_prime_t = sunlight_duration_t - datetime.timedelta(hours = 3)
+        # (ii) The new sunrise time is calculated as the average noon time minus half of d_prime_t
+    new_sunrise_t = av_noon - (d_prime_t / 2)
+    
+    # e) If the duration of sunlight is less than 24 hours but greater than 21 hours, the sunrise and sunset times are calculated as follows:
+elif sunlight_duration_t < datetime.timedelta(hours = 24):
+        # (i) 'd_prime_t' is the duration of sunlight doubled minus 24 hours
+    d_prime_t = 2 * sunlight_duration_t - datetime.timedelta(hours = 24)
+        # (ii) The new sunrise time is calculated as the average noon time minus half of d_prime_t
+    new_sunrise_t = av_noon - (d_prime_t / 2)
+else:
+    # f) If none of the above conditions are met, it is assumed that the location is in the polar circle.
+        # In this case, the sunrise and sunset times are not calculated, and a message is printed.
+    print("polar circle")
+
+# 9. Calculating the polar circle for yesterday
+    # a) If the duration of sunlight is less than 3 hours but greater than 1 second, the sunrise and sunset times are calculated as follows:
+if datetime.timedelta(seconds = 1) <= sunlight_duration_y < datetime.timedelta(hours = 3):
+        # (i) 'd_prime_' is twice the duration of the afternoon
     d_prime_y = 2 * sunlight_duration_y
+        # (ii) New sunset time 12pm + half of d_prime_y
     new_sunset_y = av_noon + (d_prime_y / 2)
-elif sunlight_duration_y < datetime.timedelta(hours=9):
-    d_prime_y = sunlight_duration_y + datetime.timedelta(hours=3)
+    # b) If the duration of sunlight is less than 9 hours but greater than 3 hours, the sunrise and sunset times are calculated as follows:
+elif datetime.timedelta(hours = 3) <= sunlight_duration_y < datetime.timedelta(hours = 9):
+        # (i) 'd_prime_y' is the duration of sunlight plus 3 hours
+    d_prime_y = sunlight_duration_y + datetime.timedelta(hours = 3)
+        # (ii) New sunset time 12pm + half of d_prime_y
     new_sunset_y = av_noon + (d_prime_y / 2)
-elif sunlight_duration_y < datetime.timedelta(hours=15):
-    d_prime_y = datetime.timedelta(hours=12)
+    # c) If the duration of sunlight is less than 15 hours but greater than 9 hours, the sunrise and sunset times are calculated as follows:
+elif datetime.timedelta(hours = 9) <= sunlight_duration_y < datetime.timedelta(hours = 15):
+        # (i) 'd_prime_y' is 12 hours
+    d_prime_y = datetime.timedelta(hours = 12)
+        # (ii) New sunset time 12pm + half of d_prime_y
     new_sunset_y = av_noon + (d_prime_y / 2)
-elif sunlight_duration_y < datetime.timedelta(hours=21):
-    d_prime_y = sunlight_duration_y - datetime.timedelta(hours=3)
+    # d) If the duration of sunlight is less than 21 hours but greater than 15 hours, the sunrise and sunset times are calculated as follows:
+elif datetime.timedelta(hours = 15) <= sunlight_duration_y < datetime.timedelta(hours = 21):
+        # (i) 'd_prime_y' is the duration of sunlight minus 3 hours
+    d_prime_y = sunlight_duration_y - datetime.timedelta(hours = 3)
+        # (ii) New sunset time 12pm + half of d_prime_y
     new_sunset_y = av_noon + (d_prime_y / 2)
-elif sunlight_duration_y < datetime.timedelta(hours=24):
-    d_prime_y= 2 * sunlight_duration_y - datetime.timedelta(hours=24)
+    # e) If the duration of sunlight is less than 24 hours but greater than 21 hours, the sunrise and sunset times are calculated as follows:
+elif sunlight_duration_y < datetime.timedelta(hours = 24):
+        # (i) 'd_prime_y' is the duration of sunlight doubled minus 24 hours
+    d_prime_y = 2 * sunlight_duration_y - datetime.timedelta(hours = 24)
+        # (ii) New sunset time 12pm + half of d_prime_y
     new_sunset_y = av_noon + (d_prime_y / 2)
+else:
+    print("polar circle")
 
 # -------------------------------------
+# 10. Converting sunrise and sunset times to seconds
+    # a) Today's sunrise time converted to seconds
 va = time.strptime(str(sunrise_time).split(',')[0], '%H:%M:%S.%f')
-sunrise_time_s = (datetime.timedelta(hours=va.tm_hour, minutes=va.tm_min, seconds=va.tm_sec).total_seconds())
-
+sunrise_time_s = (datetime.timedelta(hours = va.tm_hour, minutes = va.tm_min, seconds = va.tm_sec).total_seconds())
+    # b) Today's newly-set sunrise time in seconds
 vb = time.strptime(str(new_sunrise).split(',')[0], '%H:%M:%S')
 new_sunrise_s = (datetime.timedelta(hours=vb.tm_hour, minutes=vb.tm_min, seconds=vb.tm_sec).total_seconds())
-
+    # c) Tomorrow's sunrise time converted to seconds
 vc = time.strptime(str(sunrise_time_t).split(',')[0], '%H:%M:%S.%f')
 sunrise_time_t_s = (datetime.timedelta(hours=vc.tm_hour, minutes=vc.tm_min, seconds=vc.tm_sec).total_seconds())
-
+    # d) Yesterday's sunset time converted to seconds
 vd = time.strptime(str(sunset_time_y).split(',')[0], '%H:%M:%S.%f')
 sunset_time_y_s = (datetime.timedelta(hours=vd.tm_hour, minutes=vd.tm_min, seconds=vd.tm_sec).total_seconds())
-
+    # e) Today's sunset time converted to seconds
 ve = time.strptime(str(sunset_time).split(',')[0], '%H:%M:%S.%f')
 sunset_time_s = (datetime.timedelta(hours=ve.tm_hour, minutes=ve.tm_min, seconds=ve.tm_sec).total_seconds())
-
+    # f) Today's newly-set sunset time in seconds
 vf = time.strptime(str(new_sunset).split(',')[0], '%H:%M:%S')
 new_sunset_s = (datetime.timedelta(hours=vf.tm_hour, minutes=vf.tm_min, seconds=vf.tm_sec).total_seconds())
-
+    # g) Yesterday's newly-set sunset time converted to seconds
 vg = time.strptime(str(new_sunset_y).split(',')[0], '%H:%M:%S')
-new_sunset_y_s = (datetime.timedelta(hours=vg.tm_hour, minutes=vg.tm_min, seconds=vg.tm_sec).total_seconds())
-
+new_sunset_y_s = (datetime.timedelta(hours = vg.tm_hour, minutes=vg.tm_min, seconds=vg.tm_sec).total_seconds())
+    # h) Tomorrow's newly-set sunrise time in seconds
 vh = time.strptime(str(new_sunrise_t).split(',')[0], '%H:%M:%S')
 new_sunrise_t_s = (datetime.timedelta(hours=vh.tm_hour, minutes=vh.tm_min, seconds=vh.tm_sec).total_seconds())
 
@@ -195,7 +270,7 @@ def time_equation():
     root.after(60000, datetime.datetime.utcnow)
 
 new_seconds = round(time_equation())
-new_time2 = datetime.timedelta(seconds=time_equation())
+new_time2 = datetime.timedelta(seconds = time_equation())
 new_time3 = (str(new_time2))
 new_clock = new_time3.split('.')[0]
 
