@@ -136,15 +136,15 @@ elif datetime.timedelta(hours = 15) <= sunlight_duration < datetime.timedelta(ho
     # e) If the duration of sunlight is less than 24 hours but greater than 21 hours, the sunrise and sunset times are calculated as follows:
 elif datetime.timedelta(hours = 21) <= sunlight_duration < datetime.timedelta(hours = 24):
         # (i) 'd_prime' is the duration of sunlight doubled minus 24 hours
-    d_prime = 2 * sunlight_duration - datetime.timedelta(hours=24)
+    d_prime = 2 * sunlight_duration - datetime.timedelta(hours = 24)
         # (ii) The new sunrise time is calculated as the average noon time minus half of the duration of sunlight
     new_sunrise = av_noon - (d_prime / 2)
         # (iii) The new sunset time is calculated as the average noon time plus half of the duration of sunlight
     new_sunset = av_noon + (d_prime / 2)
 else:
     print("polar circle")
-
-# 8. Calculating the polar circle for tomorrow
+# -------------------------------------
+# 9. Calculating the polar circle for tomorrow
     # a) If the duration of sunlight is less than 3 hours but greater than 1 second, the sunrise and sunset times are calculated as follows:
 if datetime.timedelta(seconds = 1) <= sunlight_duration_t < datetime.timedelta(hours = 3):
         # (i) 'd_prime_t' is the duration of sunlight doubled
@@ -184,7 +184,9 @@ else:
         # In this case, the sunrise and sunset times are not calculated, and a message is printed.
     print("polar circle")
 
-# 9. Calculating the polar circle for yesterday
+# -------------------------------------
+
+# 10. Calculating the polar circle for yesterday
     # a) If the duration of sunlight is less than 3 hours but greater than 1 second, the sunrise and sunset times are calculated as follows:
 if datetime.timedelta(seconds = 1) <= sunlight_duration_y < datetime.timedelta(hours = 3):
         # (i) 'd_prime_' is twice the duration of the afternoon
@@ -219,7 +221,7 @@ else:
     print("polar circle")
 
 # -------------------------------------
-# 10. Converting sunrise and sunset times to seconds
+# 11. Converting sunrise and sunset times to seconds
     # a) Today's sunrise time converted to seconds
 va = time.strptime(str(sunrise_time).split(',')[0], '%H:%M:%S.%f')
 sunrise_time_s = (datetime.timedelta(hours = va.tm_hour, minutes = va.tm_min, seconds = va.tm_sec).total_seconds())
@@ -245,14 +247,20 @@ new_sunset_y_s = (datetime.timedelta(hours = vg.tm_hour, minutes=vg.tm_min, seco
 vh = time.strptime(str(new_sunrise_t).split(',')[0], '%H:%M:%S')
 new_sunrise_t_s = (datetime.timedelta(hours=vh.tm_hour, minutes=vh.tm_min, seconds=vh.tm_sec).total_seconds())
 
+# 12. Calculating the ratio between:
 # velocity s'/s
+    # a) Today's newly-set sunrise to sunset duration from the actual sunrise to sunset duration
 v5_sunrise_to_sunset = (new_sunset_s - new_sunrise_s) / (sunset_time_s - sunrise_time_s)
-v6_sunset_to_sunrise = (86400 - new_sunset_s + new_sunrise_t_s) / (86400 - sunset_time_s + sunrise_time_t_s)
+    # b) Tomorrow's newly-set sunrise to sunset duration from the actual sunrise to sunset duration
+v6_sunset_to_sunrise = (86400 - new_sunset_s + new_sunrise_t_s) / (86400 - sunset_time_s + sunrise_time_t_s) # 86400 being the no. of seconds in a day
+
 # -------------------------------------
-# time_equation
+# 13. Formulating the time_equation
 
 def time_equation():
+    # a) Getting the current local time
     h = datetime.datetime.time(current_local)
+    # b) Calculating the no. of seconds from the current local time
     h_seconds = (h.hour * 60 + h.minute) * 60 + h.second
     if h <= sunrise_time:
         new_time_seconds = ((h_seconds + 86400 - sunset_time_y_s) * v6_sunset_to_sunrise + new_sunset_y_s) % 86400
@@ -274,14 +282,13 @@ new_time2 = datetime.timedelta(seconds = time_equation())
 new_time3 = (str(new_time2))
 new_clock = new_time3.split('.')[0]
 
-# -------------digital clock -----------
-# This function is used to
-# display time on the label
-root = Tk()
-root.title('Clock')
-timero = [new_seconds//3600, (new_seconds % 3600)//60, (new_seconds % 60)]
-timestr = '00:00:00'
-pattern = '{0:02d}:{1:02d}:{2:02d}'
+# ------------- digital clock -----------
+# This function is used to display time on the label
+root = Tk() # creating a tkinter window
+root.title('Clock') # setting the title of the window
+timero = [new_seconds//3600, (new_seconds % 3600)//60, (new_seconds % 60)] # setting the time to be displayed on the label
+timestr = '00:00:00' # setting the initial time to be displayed on the label
+pattern = '{0:02d}:{1:02d}:{2:02d}' # setting the pattern for the time to be displayed on the label
 
 def speed():
     h = datetime.datetime.time(current_local)
