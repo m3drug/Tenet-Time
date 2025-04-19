@@ -262,18 +262,19 @@ def time_equation():
     h = datetime.datetime.time(current_local)
     # b) Calculating the no. of seconds from the current local time
     h_seconds = (h.hour * 60 + h.minute) * 60 + h.second
+    # c) If the current local time is less than or equal to the sunrise time, the new time is calculated as follows:
     if h <= sunrise_time:
         new_time_seconds = ((h_seconds + 86400 - sunset_time_y_s) * v6_sunset_to_sunrise + new_sunset_y_s) % 86400
         return new_time_seconds
-
+    # d) Else, if the current local time is greater than the sunrise time but less than or equal to the sunset time, the new time is calculated as follows:
     elif sunrise_time < h <= sunset_time:
         new_time_seconds = (h_seconds - sunrise_time_s) * v5_sunrise_to_sunset + new_sunrise_s
         return new_time_seconds
-
+    # e) Else, if the current local time is greater than the sunset time but less than or equal to 23:59:59, the new time is calculated as follows:
     elif sunset_time < h <= datetime.time(23, 59, 59, 999999):
         new_time_seconds = ((h_seconds - sunset_time_s) * v6_sunset_to_sunrise + new_sunset_s) % 86400
         return new_time_seconds
-
+    # 
     root.after(60000, time_equation)
     root.after(60000, datetime.datetime.utcnow)
 
