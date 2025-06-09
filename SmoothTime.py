@@ -211,7 +211,7 @@ elif datetime.timedelta(hours = 15) <= sunlight_duration_y < datetime.timedelta(
     d_prime_y = sunlight_duration_y - datetime.timedelta(hours = 3)
         # (ii) New sunset time 12pm + half of d_prime_y
     new_sunset_y = av_noon + (d_prime_y / 2)
-    # e) If the duration of sunlight is less than 24 hours but greater than 21 hours, the sunrise and sunset times are calculated as follows:
+    # e) If the duration of sunlight is less Othan 24 hours but greater than 21 hours, the sunrise and sunset times are calculated as follows:
 elif sunlight_duration_y < datetime.timedelta(hours = 24):
         # (i) 'd_prime_y' is the duration of sunlight doubled minus 24 hours
     d_prime_y = 2 * sunlight_duration_y - datetime.timedelta(hours = 24)
