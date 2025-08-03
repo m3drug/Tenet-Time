@@ -247,34 +247,43 @@ new_sunset_y_s = (datetime.timedelta(hours = vg.tm_hour, minutes=vg.tm_min, seco
 vh = time.strptime(str(new_sunrise_t).split(',')[0], '%H:%M:%S')
 new_sunrise_t_s = (datetime.timedelta(hours=vh.tm_hour, minutes=vh.tm_min, seconds=vh.tm_sec).total_seconds())
 
-# 12. Calculating the ratio between:
-# velocity s'/s
-    # a) Today's newly-set sunrise to sunset duration from the actual sunrise to sunset duration
-v5_sunrise_to_sunset = (new_sunset_s - new_sunrise_s) / (sunset_time_s - sunrise_time_s)
-    # b) Tomorrow's newly-set sunrise to sunset duration from the actual sunrise to sunset duration
-v6_sunset_to_sunrise = (86400 - new_sunset_s + new_sunrise_t_s) / (86400 - sunset_time_s + sunrise_time_t_s) # 86400 being the no. of seconds in a day
+# -------------------------------------
+# 12. Calculating velocity of time passing in Tenet Time:
+# velocity s'/s; 86400 being the no. of seconds in a day
+    # 1. Yesterday's sunset → Today's sunrise (nighttime)
+night_duration_y = (86400 + sunrise_time_s - sunset_time_y_s    # Real night duration (yesterday sunset → today sunrise)
+tent_night_duration_y = (86400 + new_sunrise_s - new_sunset_y_s)     # Tenet night duration
+v4_sunset_to_sunrise_y = tent_night_duration_y / night_duration_y  # Velocity for last night
+    # 2. Today's sunrise → Today's sunset (daytime)
+day_duration = sunset_time_s - sunrise_time_s  # Real day duration
+tent_day_duration = new_sunset_s - new_sunrise_s  # Tenet day duration
+v5_sunrise_to_sunset = tent_day_duration / day_duration  # Velocity for today's daylight
+    # 3. Today's sunset → Tomorrow's sunrise (next nighttime)
+night_duration_t = (86400 - sunset_time_s + sunrise_time_t_s)  # Real night duration (today sunset → tomorrow sunrise)
+tent_night_duration_t = (86400 - new_sunset_s + new_sunrise_t_s)  # Tenet night duration 
+v6_sunset_to_sunrise = tent_night_duration_t / night_duration_t  # Velocity for tonight
 
 # -------------------------------------
 # 13. Formulating the time_equation
 
 def time_equation():
-    # a) Getting the current local time
+    # Getting the current local time
     h = datetime.datetime.time(current_local)
-    # b) Calculating the no. of seconds from the current local time
+    # Calculating the no. of seconds from the current local time
     h_seconds = (h.hour * 60 + h.minute) * 60 + h.second
-    # c) If the current local time is less than or equal to the sunrise time, the new time is calculated as follows:
+    # Case 1: Last night (yesterday's sunset → today's sunrise)
     if h <= sunrise_time:
-        new_time_seconds = ((h_seconds + 86400 - sunset_time_y_s) * v6_sunset_to_sunrise + new_sunset_y_s) % 86400
+        new_time_seconds = ((h_seconds + 86400 - sunset_time_y_s) * v4_sunset_to_sunrise_y + new_sunset_y_s) % 86400
         return new_time_seconds
-    # d) Else, if the current local time is greater than the sunrise time but less than or equal to the sunset time, the new time is calculated as follows:
+    # Case 2: Today's daytime (sunrise → sunset)
     elif sunrise_time < h <= sunset_time:
         new_time_seconds = (h_seconds - sunrise_time_s) * v5_sunrise_to_sunset + new_sunrise_s
         return new_time_seconds
-    # e) Else, if the current local time is greater than the sunset time but less than or equal to 23:59:59, the new time is calculated as follows:
+    # Case 3: Tonight (today's sunset → tomorrow's sunrise)
     elif sunset_time < h <= datetime.time(23, 59, 59, 999999):
         new_time_seconds = ((h_seconds - sunset_time_s) * v6_sunset_to_sunrise + new_sunset_s) % 86400
         return new_time_seconds
-    # 
+     
     root.after(60000, time_equation)
     root.after(60000, datetime.datetime.utcnow)
 
@@ -294,7 +303,7 @@ pattern = '{0:02d}:{1:02d}:{2:02d}' # setting the pattern for the time to be dis
 def speed():
     h = datetime.datetime.time(current_local)
     if h <= sunrise_time:
-        new_speed = v6_sunset_to_sunrise
+        new_speed = v4_sunset_to_sunrise_y
         return new_speed
     elif sunrise_time < h <= sunset_time:
         new_speed = v5_sunrise_to_sunset
